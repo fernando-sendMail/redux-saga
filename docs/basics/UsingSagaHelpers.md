@@ -1,14 +1,14 @@
 # Using Saga Helpers
 
-`redux-saga` provides some helper effects wrapping internal functions to spawn tasks when some specific actions are dispatched to the Store.
+`redux-saga` ofrece algunas functiones auxiliares _(helpers)_ que ocultan funciones internas que ejecutan tareas _(tasks)_ cuando acciones son enviadas al almacén de datos _(Store)_.
 
-The helper functions are built on top of the lower level API. In the advanced section, we'll see how those functions can be implemented.
+Las funciones auxiliares están hechas sobre el API de bajo nivel de `redux-saga`. En la seccion avanzada, se analizará como esas funciones puedes ser implementadas.
 
-The first function, `takeEvery` is the most familiar and provides a behavior similar to `redux-thunk`.
+La primera function `takeEvery` _(tomarTodas)_ es la más común y provee un comportamiento similar al que se tiene en `redux-thunk`.
 
-Let's illustrate with the common AJAX example. On each click on a Fetch button we dispatch a `FETCH_REQUESTED` action. We want to handle this action by launching a task that will fetch some data from the server.
+Ejemplificando esto con un caso de común de AJAX. En cada clic en un boton que pide datos al servidor se envía una accion de tipo `FETCH_REQUESTED`. Se quiere interceptar esta acción y ejecutar una tarea _(task)_ que va a pedir datos del servidor.
 
-First we create the task that will perform the asynchronous action:
+Primero creamos esa tarea que ejecutrá la acción asíncrona:
 
 ```javascript
 import { call, put } from 'redux-saga/effects'
@@ -23,7 +23,7 @@ export function* fetchData(action) {
 }
 ```
 
-To launch the above task on each `FETCH_REQUESTED` action:
+Para interceptar cada acción `FETCH_REQUESTED` enviada y ejecutar la tarea:
 
 ```javascript
 import { takeEvery } from 'redux-saga/effects'
@@ -32,10 +32,9 @@ function* watchFetchData() {
   yield takeEvery('FETCH_REQUESTED', fetchData)
 }
 ```
+En el caso anterior `takeEvery` permite que multiples ejecuciones de la tarea `fetchData` puedan ser iniciadas de manera concurrente. En cualquier momento, se puede iniciar una nueva tarea `fetchData` mientras que hay una o más tareas `fetchData` que aún no han terminado de ejecutarse.
 
-In the above example, `takeEvery` allows multiple `fetchData` instances to be started concurrently. At a given moment, we can start a new `fetchData` task while there are still one or more previous `fetchData` tasks which have not yet terminated.
-
-If we want to only get the response of the latest request fired (e.g. to always display the latest version of data) we can use the `takeLatest` helper:
+Si se desea obtener la última respuesta del servidor de una serie de tareas iniciadas (esto es, siempre obtener los datos mas recientes) podemos usar la función auxiliar _(helper)_ `takeLatest`:
 
 ```javascript
 import { takeLatest } from 'redux-saga/effects'
@@ -45,11 +44,11 @@ function* watchFetchData() {
 }
 ```
 
-Unlike `takeEvery`, `takeLatest` allows only one `fetchData` task to run at any moment. And it will be the latest started task. If a previous task is still running when another `fetchData` task is started, the previous task will be automatically cancelled.
+A diferencia de `takeEvery`, `takeLatest` solo permite que una tarea `fetchData` se ejecute en el mismo lapso de tiempo, siendo esta la última en ser ejecutada. Si una tarea es fue ejecutada con anterioridad y aún continua ejecutandose cuando una nueva tarea `fetchData` es ejecutada la tarea `fetchData` anterior será automaticamente cancelada y no terminará su ejecución.
 
-If you have multiple Sagas watching for different actions, you can create multiple watchers with those built-in helpers, which will behave like there was `fork` used to spawn them (we'll talk about `fork` later. For now, consider it to be an Effect that allows us to start multiple sagas in the background).
+Si se tienen multiples Sagas observando por diferentes tipos de acciones, se pueden crear multiples _watchers (observadores)_ con functiones auxiliares que se comportaran como si se hubiese usado la función `fork` para lanzar esos observadores (hablaremos de la función `fork` después, por ahora hay que considerarla como si fuese un Efecto que permite tener multiples sagas en _background_).
 
-For example:
+Por ejemplo:
 
 ```javascript
 import { takeEvery } from 'redux-saga/effects'
@@ -60,7 +59,7 @@ function* fetchUsers(action) { ... }
 // CREATE_USER
 function* createUser(action) { ... }
 
-// use them in parallel
+// Las ejecuta en paralelo
 export default function* rootSaga() {
   yield takeEvery('FETCH_USERS', fetchUsers)
   yield takeEvery('CREATE_USER', createUser)
